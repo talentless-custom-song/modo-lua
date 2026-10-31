@@ -2067,7 +2067,12 @@ function createMainUI()
             return
         end
         _G.TETOMIDI_STOP = false
-        showToast("running " .. name, 2)
+        -- kiểm tra nhanh: script tự chứa thì phải có UI riêng; script loadstring gist thì bỏ qua
+        if not src:find("loadstring(game:HttpGet", 1, true) and not src:find("TetoMIDI_Song", 1, true) then
+            showToast("old script: no song ui, convert again", 3)
+        else
+            showToast("running " .. name, 2)
+        end
         task.spawn(function()
             local ok, runErr = pcall(fn)
             if not ok then showToast("run error: " .. tostring(runErr), 3) end
