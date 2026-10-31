@@ -1067,6 +1067,116 @@ end
 -- Kích thước cửa sổ (vừa cho mobile, không quá to)
 local SIDEBAR_W = 132
 
+-- bảng chuẩn hoá để tìm kiếm đa ngôn ngữ: bỏ dấu, đưa chữ hoa về chữ thường
+local FOLD_MAP = {
+    ["À"] = "a", ["Á"] = "a", ["Â"] = "a", ["Ã"] = "a", ["Ä"] = "a", ["Å"] = "a", ["Æ"] = "æ", ["Ç"] = "c",
+    ["È"] = "e", ["É"] = "e", ["Ê"] = "e", ["Ë"] = "e", ["Ì"] = "i", ["Í"] = "i", ["Î"] = "i", ["Ï"] = "i",
+    ["Ð"] = "ð", ["Ñ"] = "n", ["Ò"] = "o", ["Ó"] = "o", ["Ô"] = "o", ["Õ"] = "o", ["Ö"] = "o", ["Ø"] = "ø",
+    ["Ù"] = "u", ["Ú"] = "u", ["Û"] = "u", ["Ü"] = "u", ["Ý"] = "y", ["Þ"] = "þ", ["à"] = "a", ["á"] = "a",
+    ["â"] = "a", ["ã"] = "a", ["ä"] = "a", ["å"] = "a", ["ç"] = "c", ["è"] = "e", ["é"] = "e", ["ê"] = "e",
+    ["ë"] = "e", ["ì"] = "i", ["í"] = "i", ["î"] = "i", ["ï"] = "i", ["ñ"] = "n", ["ò"] = "o", ["ó"] = "o",
+    ["ô"] = "o", ["õ"] = "o", ["ö"] = "o", ["ù"] = "u", ["ú"] = "u", ["û"] = "u", ["ü"] = "u", ["ý"] = "y",
+    ["ÿ"] = "y", ["Ā"] = "a", ["ā"] = "a", ["Ă"] = "a", ["ă"] = "a", ["Ą"] = "a", ["ą"] = "a", ["Ć"] = "c",
+    ["ć"] = "c", ["Ĉ"] = "c", ["ĉ"] = "c", ["Ċ"] = "c", ["ċ"] = "c", ["Č"] = "c", ["č"] = "c", ["Ď"] = "d",
+    ["ď"] = "d", ["Đ"] = "d", ["đ"] = "d", ["Ē"] = "e", ["ē"] = "e", ["Ĕ"] = "e", ["ĕ"] = "e", ["Ė"] = "e",
+    ["ė"] = "e", ["Ę"] = "e", ["ę"] = "e", ["Ě"] = "e", ["ě"] = "e", ["Ĝ"] = "g", ["ĝ"] = "g", ["Ğ"] = "g",
+    ["ğ"] = "g", ["Ġ"] = "g", ["ġ"] = "g", ["Ģ"] = "g", ["ģ"] = "g", ["Ĥ"] = "h", ["ĥ"] = "h", ["Ħ"] = "ħ",
+    ["Ĩ"] = "i", ["ĩ"] = "i", ["Ī"] = "i", ["ī"] = "i", ["Ĭ"] = "i", ["ĭ"] = "i", ["Į"] = "i", ["į"] = "i",
+    ["İ"] = "i", ["Ĳ"] = "ĳ", ["Ĵ"] = "j", ["ĵ"] = "j", ["Ķ"] = "k", ["ķ"] = "k", ["Ĺ"] = "l", ["ĺ"] = "l",
+    ["Ļ"] = "l", ["ļ"] = "l", ["Ľ"] = "l", ["ľ"] = "l", ["Ŀ"] = "ŀ", ["Ł"] = "ł", ["Ń"] = "n", ["ń"] = "n",
+    ["Ņ"] = "n", ["ņ"] = "n", ["Ň"] = "n", ["ň"] = "n", ["Ŋ"] = "ŋ", ["Ō"] = "o", ["ō"] = "o", ["Ŏ"] = "o",
+    ["ŏ"] = "o", ["Ő"] = "o", ["ő"] = "o", ["Œ"] = "œ", ["Ŕ"] = "r", ["ŕ"] = "r", ["Ŗ"] = "r", ["ŗ"] = "r",
+    ["Ř"] = "r", ["ř"] = "r", ["Ś"] = "s", ["ś"] = "s", ["Ŝ"] = "s", ["ŝ"] = "s", ["Ş"] = "s", ["ş"] = "s",
+    ["Š"] = "s", ["š"] = "s", ["Ţ"] = "t", ["ţ"] = "t", ["Ť"] = "t", ["ť"] = "t", ["Ŧ"] = "ŧ", ["Ũ"] = "u",
+    ["ũ"] = "u", ["Ū"] = "u", ["ū"] = "u", ["Ŭ"] = "u", ["ŭ"] = "u", ["Ů"] = "u", ["ů"] = "u", ["Ű"] = "u",
+    ["ű"] = "u", ["Ų"] = "u", ["ų"] = "u", ["Ŵ"] = "w", ["ŵ"] = "w", ["Ŷ"] = "y", ["ŷ"] = "y", ["Ÿ"] = "y",
+    ["Ź"] = "z", ["ź"] = "z", ["Ż"] = "z", ["ż"] = "z", ["Ž"] = "z", ["ž"] = "z", ["Ɓ"] = "ɓ", ["Ƃ"] = "ƃ",
+    ["Ƅ"] = "ƅ", ["Ɔ"] = "ɔ", ["Ƈ"] = "ƈ", ["Ɖ"] = "ɖ", ["Ɗ"] = "ɗ", ["Ƌ"] = "ƌ", ["Ǝ"] = "ǝ", ["Ə"] = "ə",
+    ["Ɛ"] = "ɛ", ["Ƒ"] = "ƒ", ["Ɠ"] = "ɠ", ["Ɣ"] = "ɣ", ["Ɩ"] = "ɩ", ["Ɨ"] = "ɨ", ["Ƙ"] = "ƙ", ["Ɯ"] = "ɯ",
+    ["Ɲ"] = "ɲ", ["Ɵ"] = "ɵ", ["Ơ"] = "o", ["ơ"] = "o", ["Ƣ"] = "ƣ", ["Ƥ"] = "ƥ", ["Ʀ"] = "ʀ", ["Ƨ"] = "ƨ",
+    ["Ʃ"] = "ʃ", ["Ƭ"] = "ƭ", ["Ʈ"] = "ʈ", ["Ư"] = "u", ["ư"] = "u", ["Ʊ"] = "ʊ", ["Ʋ"] = "ʋ", ["Ƴ"] = "ƴ",
+    ["Ƶ"] = "ƶ", ["Ʒ"] = "ʒ", ["Ƹ"] = "ƹ", ["Ƽ"] = "ƽ", ["Ǆ"] = "ǆ", ["ǅ"] = "ǆ", ["Ǉ"] = "ǉ", ["ǈ"] = "ǉ",
+    ["Ǌ"] = "ǌ", ["ǋ"] = "ǌ", ["Ǎ"] = "a", ["ǎ"] = "a", ["Ǐ"] = "i", ["ǐ"] = "i", ["Ǒ"] = "o", ["ǒ"] = "o",
+    ["Ǔ"] = "u", ["ǔ"] = "u", ["Ǖ"] = "u", ["ǖ"] = "u", ["Ǘ"] = "u", ["ǘ"] = "u", ["Ǚ"] = "u", ["ǚ"] = "u",
+    ["Ǜ"] = "u", ["ǜ"] = "u", ["Ǟ"] = "a", ["ǟ"] = "a", ["Ǡ"] = "a", ["ǡ"] = "a", ["Ǣ"] = "ǣ", ["Ǥ"] = "ǥ",
+    ["Ǧ"] = "g", ["ǧ"] = "g", ["Ǩ"] = "k", ["ǩ"] = "k", ["Ǫ"] = "o", ["ǫ"] = "o", ["Ǭ"] = "o", ["ǭ"] = "o",
+    ["Ǯ"] = "ǯ", ["ǰ"] = "j", ["Ǳ"] = "ǳ", ["ǲ"] = "ǳ", ["Ǵ"] = "g", ["ǵ"] = "g", ["Ƕ"] = "ƕ", ["Ƿ"] = "ƿ",
+    ["Ǹ"] = "n", ["ǹ"] = "n", ["Ǻ"] = "a", ["ǻ"] = "a", ["Ǽ"] = "ǽ", ["Ǿ"] = "ǿ", ["Ȁ"] = "a", ["ȁ"] = "a",
+    ["Ȃ"] = "a", ["ȃ"] = "a", ["Ȅ"] = "e", ["ȅ"] = "e", ["Ȇ"] = "e", ["ȇ"] = "e", ["Ȉ"] = "i", ["ȉ"] = "i",
+    ["Ȋ"] = "i", ["ȋ"] = "i", ["Ȍ"] = "o", ["ȍ"] = "o", ["Ȏ"] = "o", ["ȏ"] = "o", ["Ȑ"] = "r", ["ȑ"] = "r",
+    ["Ȓ"] = "r", ["ȓ"] = "r", ["Ȕ"] = "u", ["ȕ"] = "u", ["Ȗ"] = "u", ["ȗ"] = "u", ["Ș"] = "s", ["ș"] = "s",
+    ["Ț"] = "t", ["ț"] = "t", ["Ȝ"] = "ȝ", ["Ȟ"] = "h", ["ȟ"] = "h", ["Ƞ"] = "ƞ", ["Ȣ"] = "ȣ", ["Ȥ"] = "ȥ",
+    ["Ȧ"] = "a", ["ȧ"] = "a", ["Ȩ"] = "e", ["ȩ"] = "e", ["Ȫ"] = "o", ["ȫ"] = "o", ["Ȭ"] = "o", ["ȭ"] = "o",
+    ["Ȯ"] = "o", ["ȯ"] = "o", ["Ȱ"] = "o", ["ȱ"] = "o", ["Ȳ"] = "y", ["ȳ"] = "y", ["Ⱥ"] = "ⱥ", ["Ȼ"] = "ȼ",
+    ["Ƚ"] = "ƚ", ["Ⱦ"] = "ⱦ", ["Ɂ"] = "ɂ", ["Ƀ"] = "ƀ", ["Ʉ"] = "ʉ", ["Ʌ"] = "ʌ", ["Ɇ"] = "ɇ", ["Ɉ"] = "ɉ",
+    ["Ɋ"] = "ɋ", ["Ɍ"] = "ɍ", ["Ɏ"] = "ɏ", ["Ḁ"] = "a", ["ḁ"] = "a", ["Ḃ"] = "b", ["ḃ"] = "b", ["Ḅ"] = "b",
+    ["ḅ"] = "b", ["Ḇ"] = "b", ["ḇ"] = "b", ["Ḉ"] = "c", ["ḉ"] = "c", ["Ḋ"] = "d", ["ḋ"] = "d", ["Ḍ"] = "d",
+    ["ḍ"] = "d", ["Ḏ"] = "d", ["ḏ"] = "d", ["Ḑ"] = "d", ["ḑ"] = "d", ["Ḓ"] = "d", ["ḓ"] = "d", ["Ḕ"] = "e",
+    ["ḕ"] = "e", ["Ḗ"] = "e", ["ḗ"] = "e", ["Ḙ"] = "e", ["ḙ"] = "e", ["Ḛ"] = "e", ["ḛ"] = "e", ["Ḝ"] = "e",
+    ["ḝ"] = "e", ["Ḟ"] = "f", ["ḟ"] = "f", ["Ḡ"] = "g", ["ḡ"] = "g", ["Ḣ"] = "h", ["ḣ"] = "h", ["Ḥ"] = "h",
+    ["ḥ"] = "h", ["Ḧ"] = "h", ["ḧ"] = "h", ["Ḩ"] = "h", ["ḩ"] = "h", ["Ḫ"] = "h", ["ḫ"] = "h", ["Ḭ"] = "i",
+    ["ḭ"] = "i", ["Ḯ"] = "i", ["ḯ"] = "i", ["Ḱ"] = "k", ["ḱ"] = "k", ["Ḳ"] = "k", ["ḳ"] = "k", ["Ḵ"] = "k",
+    ["ḵ"] = "k", ["Ḷ"] = "l", ["ḷ"] = "l", ["Ḹ"] = "l", ["ḹ"] = "l", ["Ḻ"] = "l", ["ḻ"] = "l", ["Ḽ"] = "l",
+    ["ḽ"] = "l", ["Ḿ"] = "m", ["ḿ"] = "m", ["Ṁ"] = "m", ["ṁ"] = "m", ["Ṃ"] = "m", ["ṃ"] = "m", ["Ṅ"] = "n",
+    ["ṅ"] = "n", ["Ṇ"] = "n", ["ṇ"] = "n", ["Ṉ"] = "n", ["ṉ"] = "n", ["Ṋ"] = "n", ["ṋ"] = "n", ["Ṍ"] = "o",
+    ["ṍ"] = "o", ["Ṏ"] = "o", ["ṏ"] = "o", ["Ṑ"] = "o", ["ṑ"] = "o", ["Ṓ"] = "o", ["ṓ"] = "o", ["Ṕ"] = "p",
+    ["ṕ"] = "p", ["Ṗ"] = "p", ["ṗ"] = "p", ["Ṙ"] = "r", ["ṙ"] = "r", ["Ṛ"] = "r", ["ṛ"] = "r", ["Ṝ"] = "r",
+    ["ṝ"] = "r", ["Ṟ"] = "r", ["ṟ"] = "r", ["Ṡ"] = "s", ["ṡ"] = "s", ["Ṣ"] = "s", ["ṣ"] = "s", ["Ṥ"] = "s",
+    ["ṥ"] = "s", ["Ṧ"] = "s", ["ṧ"] = "s", ["Ṩ"] = "s", ["ṩ"] = "s", ["Ṫ"] = "t", ["ṫ"] = "t", ["Ṭ"] = "t",
+    ["ṭ"] = "t", ["Ṯ"] = "t", ["ṯ"] = "t", ["Ṱ"] = "t", ["ṱ"] = "t", ["Ṳ"] = "u", ["ṳ"] = "u", ["Ṵ"] = "u",
+    ["ṵ"] = "u", ["Ṷ"] = "u", ["ṷ"] = "u", ["Ṹ"] = "u", ["ṹ"] = "u", ["Ṻ"] = "u", ["ṻ"] = "u", ["Ṽ"] = "v",
+    ["ṽ"] = "v", ["Ṿ"] = "v", ["ṿ"] = "v", ["Ẁ"] = "w", ["ẁ"] = "w", ["Ẃ"] = "w", ["ẃ"] = "w", ["Ẅ"] = "w",
+    ["ẅ"] = "w", ["Ẇ"] = "w", ["ẇ"] = "w", ["Ẉ"] = "w", ["ẉ"] = "w", ["Ẋ"] = "x", ["ẋ"] = "x", ["Ẍ"] = "x",
+    ["ẍ"] = "x", ["Ẏ"] = "y", ["ẏ"] = "y", ["Ẑ"] = "z", ["ẑ"] = "z", ["Ẓ"] = "z", ["ẓ"] = "z", ["Ẕ"] = "z",
+    ["ẕ"] = "z", ["ẖ"] = "h", ["ẗ"] = "t", ["ẘ"] = "w", ["ẙ"] = "y", ["ẞ"] = "ß", ["Ạ"] = "a", ["ạ"] = "a",
+    ["Ả"] = "a", ["ả"] = "a", ["Ấ"] = "a", ["ấ"] = "a", ["Ầ"] = "a", ["ầ"] = "a", ["Ẩ"] = "a", ["ẩ"] = "a",
+    ["Ẫ"] = "a", ["ẫ"] = "a", ["Ậ"] = "a", ["ậ"] = "a", ["Ắ"] = "a", ["ắ"] = "a", ["Ằ"] = "a", ["ằ"] = "a",
+    ["Ẳ"] = "a", ["ẳ"] = "a", ["Ẵ"] = "a", ["ẵ"] = "a", ["Ặ"] = "a", ["ặ"] = "a", ["Ẹ"] = "e", ["ẹ"] = "e",
+    ["Ẻ"] = "e", ["ẻ"] = "e", ["Ẽ"] = "e", ["ẽ"] = "e", ["Ế"] = "e", ["ế"] = "e", ["Ề"] = "e", ["ề"] = "e",
+    ["Ể"] = "e", ["ể"] = "e", ["Ễ"] = "e", ["ễ"] = "e", ["Ệ"] = "e", ["ệ"] = "e", ["Ỉ"] = "i", ["ỉ"] = "i",
+    ["Ị"] = "i", ["ị"] = "i", ["Ọ"] = "o", ["ọ"] = "o", ["Ỏ"] = "o", ["ỏ"] = "o", ["Ố"] = "o", ["ố"] = "o",
+    ["Ồ"] = "o", ["ồ"] = "o", ["Ổ"] = "o", ["ổ"] = "o", ["Ỗ"] = "o", ["ỗ"] = "o", ["Ộ"] = "o", ["ộ"] = "o",
+    ["Ớ"] = "o", ["ớ"] = "o", ["Ờ"] = "o", ["ờ"] = "o", ["Ở"] = "o", ["ở"] = "o", ["Ỡ"] = "o", ["ỡ"] = "o",
+    ["Ợ"] = "o", ["ợ"] = "o", ["Ụ"] = "u", ["ụ"] = "u", ["Ủ"] = "u", ["ủ"] = "u", ["Ứ"] = "u", ["ứ"] = "u",
+    ["Ừ"] = "u", ["ừ"] = "u", ["Ử"] = "u", ["ử"] = "u", ["Ữ"] = "u", ["ữ"] = "u", ["Ự"] = "u", ["ự"] = "u",
+    ["Ỳ"] = "y", ["ỳ"] = "y", ["Ỵ"] = "y", ["ỵ"] = "y", ["Ỷ"] = "y", ["ỷ"] = "y", ["Ỹ"] = "y", ["ỹ"] = "y",
+    ["Ỻ"] = "ỻ", ["Ỽ"] = "ỽ", ["Ỿ"] = "ỿ", ["Ͱ"] = "ͱ", ["Ͳ"] = "ͳ", ["Ͷ"] = "ͷ", ["Ϳ"] = "ϳ", ["Ά"] = "ά",
+    ["Έ"] = "έ", ["Ή"] = "ή", ["Ί"] = "ί", ["Ό"] = "ό", ["Ύ"] = "ύ", ["Ώ"] = "ώ", ["Α"] = "α", ["Β"] = "β",
+    ["Γ"] = "γ", ["Δ"] = "δ", ["Ε"] = "ε", ["Ζ"] = "ζ", ["Η"] = "η", ["Θ"] = "θ", ["Ι"] = "ι", ["Κ"] = "κ",
+    ["Λ"] = "λ", ["Μ"] = "μ", ["Ν"] = "ν", ["Ξ"] = "ξ", ["Ο"] = "ο", ["Π"] = "π", ["Ρ"] = "ρ", ["Σ"] = "σ",
+    ["Τ"] = "τ", ["Υ"] = "υ", ["Φ"] = "φ", ["Χ"] = "χ", ["Ψ"] = "ψ", ["Ω"] = "ω", ["Ϊ"] = "ϊ", ["Ϋ"] = "ϋ",
+    ["Ϗ"] = "ϗ", ["Ϙ"] = "ϙ", ["Ϛ"] = "ϛ", ["Ϝ"] = "ϝ", ["Ϟ"] = "ϟ", ["Ϡ"] = "ϡ", ["Ϣ"] = "ϣ", ["Ϥ"] = "ϥ",
+    ["Ϧ"] = "ϧ", ["Ϩ"] = "ϩ", ["Ϫ"] = "ϫ", ["Ϭ"] = "ϭ", ["Ϯ"] = "ϯ", ["ϴ"] = "θ", ["Ϸ"] = "ϸ", ["Ϲ"] = "ϲ",
+    ["Ϻ"] = "ϻ", ["Ͻ"] = "ͻ", ["Ͼ"] = "ͼ", ["Ͽ"] = "ͽ", ["Ѐ"] = "ѐ", ["Ё"] = "ё", ["Ђ"] = "ђ", ["Ѓ"] = "ѓ",
+    ["Є"] = "є", ["Ѕ"] = "ѕ", ["І"] = "і", ["Ї"] = "ї", ["Ј"] = "ј", ["Љ"] = "љ", ["Њ"] = "њ", ["Ћ"] = "ћ",
+    ["Ќ"] = "ќ", ["Ѝ"] = "ѝ", ["Ў"] = "ў", ["Џ"] = "џ", ["А"] = "а", ["Б"] = "б", ["В"] = "в", ["Г"] = "г",
+    ["Д"] = "д", ["Е"] = "е", ["Ж"] = "ж", ["З"] = "з", ["И"] = "и", ["Й"] = "й", ["К"] = "к", ["Л"] = "л",
+    ["М"] = "м", ["Н"] = "н", ["О"] = "о", ["П"] = "п", ["Р"] = "р", ["С"] = "с", ["Т"] = "т", ["У"] = "у",
+    ["Ф"] = "ф", ["Х"] = "х", ["Ц"] = "ц", ["Ч"] = "ч", ["Ш"] = "ш", ["Щ"] = "щ", ["Ъ"] = "ъ", ["Ы"] = "ы",
+    ["Ь"] = "ь", ["Э"] = "э", ["Ю"] = "ю", ["Я"] = "я", ["Ѡ"] = "ѡ", ["Ѣ"] = "ѣ", ["Ѥ"] = "ѥ", ["Ѧ"] = "ѧ",
+    ["Ѩ"] = "ѩ", ["Ѫ"] = "ѫ", ["Ѭ"] = "ѭ", ["Ѯ"] = "ѯ", ["Ѱ"] = "ѱ", ["Ѳ"] = "ѳ", ["Ѵ"] = "ѵ", ["Ѷ"] = "ѷ",
+    ["Ѹ"] = "ѹ", ["Ѻ"] = "ѻ", ["Ѽ"] = "ѽ", ["Ѿ"] = "ѿ", ["Ҁ"] = "ҁ", ["Ҋ"] = "ҋ", ["Ҍ"] = "ҍ", ["Ҏ"] = "ҏ",
+    ["Ґ"] = "ґ", ["Ғ"] = "ғ", ["Ҕ"] = "ҕ", ["Җ"] = "җ", ["Ҙ"] = "ҙ", ["Қ"] = "қ", ["Ҝ"] = "ҝ", ["Ҟ"] = "ҟ",
+    ["Ҡ"] = "ҡ", ["Ң"] = "ң", ["Ҥ"] = "ҥ", ["Ҧ"] = "ҧ", ["Ҩ"] = "ҩ", ["Ҫ"] = "ҫ", ["Ҭ"] = "ҭ", ["Ү"] = "ү",
+    ["Ұ"] = "ұ", ["Ҳ"] = "ҳ", ["Ҵ"] = "ҵ", ["Ҷ"] = "ҷ", ["Ҹ"] = "ҹ", ["Һ"] = "һ", ["Ҽ"] = "ҽ", ["Ҿ"] = "ҿ",
+    ["Ӏ"] = "ӏ", ["Ӂ"] = "ӂ", ["Ӄ"] = "ӄ", ["Ӆ"] = "ӆ", ["Ӈ"] = "ӈ", ["Ӊ"] = "ӊ", ["Ӌ"] = "ӌ", ["Ӎ"] = "ӎ",
+    ["Ӑ"] = "ӑ", ["Ӓ"] = "ӓ", ["Ӕ"] = "ӕ", ["Ӗ"] = "ӗ", ["Ә"] = "ә", ["Ӛ"] = "ӛ", ["Ӝ"] = "ӝ", ["Ӟ"] = "ӟ",
+    ["Ӡ"] = "ӡ", ["Ӣ"] = "ӣ", ["Ӥ"] = "ӥ", ["Ӧ"] = "ӧ", ["Ө"] = "ө", ["Ӫ"] = "ӫ", ["Ӭ"] = "ӭ", ["Ӯ"] = "ӯ",
+    ["Ӱ"] = "ӱ", ["Ӳ"] = "ӳ", ["Ӵ"] = "ӵ", ["Ӷ"] = "ӷ", ["Ӹ"] = "ӹ", ["Ӻ"] = "ӻ", ["Ӽ"] = "ӽ", ["Ӿ"] = "ӿ",
+}
+
+local function foldText(s)
+    s = tostring(s)
+    for from, to in pairs(FOLD_MAP) do
+        s = s:gsub(from, to)
+    end
+    return s:lower()
+end
+
+local function trimText(s)
+    return (tostring(s):gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
 -- ====================== MAIN UI ======================
 function createMainUI()
     local gui = Instance.new("ScreenGui")
@@ -1901,30 +2011,21 @@ function createMainUI()
     nameBox.Parent = namePill
     claimInput(nameBox)
 
+    -- ô dán script: chiếm toàn bộ khung, chạm vào đâu trong khung cũng dán được
     local scriptPill = Instance.new("Frame")
-    scriptPill.Size = UDim2.new(1, -24, 1, -120)
+    scriptPill.Size = UDim2.new(1, -24, 1, -126)
     scriptPill.Position = UDim2.new(0, 12, 0, 80)
     scriptPill.BackgroundTransparency = 1
     scriptPill.Parent = customPage
     glassify(scriptPill, UDim.new(0, 16), {tint = GLASS_WHITE, alpha = 0.86, shine = 0.9})
-    local scriptScroll = Instance.new("ScrollingFrame")
-    scriptScroll.Size = UDim2.new(1, -12, 1, -12)
-    scriptScroll.Position = UDim2.new(0, 6, 0, 6)
-    scriptScroll.BackgroundTransparency = 1
-    scriptScroll.BorderSizePixel = 0
-    scriptScroll.ScrollBarThickness = 3
-    scriptScroll.ScrollBarImageColor3 = gray(190)
-    scriptScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    scriptScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-    scriptScroll.Parent = scriptPill
-    claimInput(scriptScroll)
 
     local scriptBox = Instance.new("TextBox")
-    scriptBox.Size = UDim2.new(1, -10, 0, 0)
-    scriptBox.AutomaticSize = Enum.AutomaticSize.Y
+    scriptBox.Name = "ScriptBox"
+    scriptBox.Size = UDim2.new(1, -20, 1, -20)
+    scriptBox.Position = UDim2.new(0, 10, 0, 10)
     scriptBox.BackgroundTransparency = 1
     scriptBox.Text = ""
-    scriptBox.PlaceholderText = "paste midi2lua script here"
+    scriptBox.PlaceholderText = "tap here and paste midi2lua script"
     scriptBox.PlaceholderColor3 = gray(205)
     scriptBox.TextColor3 = WHITE
     scriptBox.Font = Enum.Font.Gotham
@@ -1934,7 +2035,8 @@ function createMainUI()
     scriptBox.TextWrapped = true
     scriptBox.MultiLine = true
     scriptBox.ClearTextOnFocus = false
-    scriptBox.Parent = scriptScroll
+    scriptBox.ZIndex = 2
+    scriptBox.Parent = scriptPill
     claimInput(scriptBox)
 
     nameBox.Text = Cfg.custom.name or ""
@@ -1957,7 +2059,7 @@ function createMainUI()
     local function saveCustomScript(name, src)
         pcall(function()
             if isfolder and not isfolder(CUSTOM_DIR) then makefolder(CUSTOM_DIR) end
-            if writefile then writefile(CUSTOM_DIR .. "/" .. name .. ".lua", src) end
+            if writefile then writefile(CUSTOM_DIR .. "/" .. name .. ".txt", src) end
         end)
     end
 
@@ -1992,7 +2094,9 @@ function createMainUI()
         if src:match("^%s*$") then showToast("paste a script first", 2) return end
         local name = customName()
         saveCustomScript(name, src)
-        showToast("saved to custom song/" .. name .. ".lua", 2.5)
+        showToast("saved: " .. name .. ".txt", 2.5)
+        nameBox.Text = ""
+        scriptBox.Text = ""
     end)
 
     customBtn(188, "clear", function()
@@ -2038,15 +2142,47 @@ function createMainUI()
     playerTitle.Parent = playerPage
     softText(playerTitle)
 
+    -- ô tìm kiếm: không phân biệt hoa thường, không cần dấu (tìm được cả tiếng Việt và đa ngôn ngữ)
     local refreshList
+    local searchText = ""
+    local rowsByName = {}
+    local selectedName = nil
+
+    local searchPill = Instance.new("Frame")
+    searchPill.Name = "SearchPill"
+    searchPill.Size = UDim2.new(1, 0, 0, 32)
+    searchPill.BackgroundTransparency = 1
+    searchPill.LayoutOrder = 1
+    searchPill.Parent = playerPage
+    glassify(searchPill, UDim.new(0, 12), {tint = GLASS_WHITE, alpha = 0.86, shine = 0.9})
+
+    local searchBox = Instance.new("TextBox")
+    searchBox.Size = UDim2.new(1, -24, 1, 0)
+    searchBox.Position = UDim2.new(0, 12, 0, 0)
+    searchBox.BackgroundTransparency = 1
+    searchBox.Text = ""
+    searchBox.PlaceholderText = "search songs"
+    searchBox.PlaceholderColor3 = gray(205)
+    searchBox.TextColor3 = WHITE
+    searchBox.Font = Enum.Font.GothamMedium
+    searchBox.TextSize = 13
+    searchBox.TextXAlignment = Enum.TextXAlignment.Left
+    searchBox.ClearTextOnFocus = false
+    searchBox.Parent = searchPill
+    claimInput(searchBox)
+    searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+        searchText = searchBox.Text
+        refreshList()
+    end)
+
     local function songNames()
         local names = {}
         pcall(function()
             if not (listfiles and isfolder and isfolder(CUSTOM_DIR)) then return end
             for _, path in ipairs(listfiles(CUSTOM_DIR)) do
                 local fname = tostring(path):match("([^/\\]+)$")
-                if fname and fname:match("%.lua$") then
-                    table.insert(names, (fname:gsub("%.lua$", "")))
+                if fname and (fname:match("%.txt$") or fname:match("%.lua$")) then
+                    table.insert(names, (fname:gsub("%.txt$", ""):gsub("%.lua$", "")))
                 end
             end
         end)
@@ -2054,8 +2190,15 @@ function createMainUI()
         return names
     end
 
+    local function songPath(name)
+        local txt = CUSTOM_DIR .. "/" .. name .. ".txt"
+        local okf, exists = pcall(function() return isfile and isfile(txt) end)
+        if okf and exists then return txt end
+        return CUSTOM_DIR .. "/" .. name .. ".lua"
+    end
+
     local function playSong(name)
-        local path = CUSTOM_DIR .. "/" .. name .. ".lua"
+        local path = songPath(name)
         local okRead, src = pcall(readfile, path)
         if not okRead or type(src) ~= "string" then
             showToast("cannot read " .. name, 2.5)
@@ -2080,7 +2223,7 @@ function createMainUI()
     end
 
     local function deleteSong(name)
-        local path = CUSTOM_DIR .. "/" .. name .. ".lua"
+        local path = songPath(name)
         if not delfile then
             showToast("this executor can't delete files", 2.5)
             return
@@ -2090,24 +2233,26 @@ function createMainUI()
         refreshList()
     end
 
-    local function rowBtn(parent, text, x, onClick)
-        local holder = makePill(parent, UDim2.new(0, 64, 0, 28), UDim2.new(1, x, 0.5, -14))
-        local b = Instance.new("TextButton")
-        b.Size = UDim2.new(1, 0, 1, 0)
+    local function setSelected(name)
+        selectedName = name
+        for n, row in pairs(rowsByName) do
+            row.icons.Visible = (n == name)
+        end
+    end
+
+    local function iconButton(parent, iconName, pos, onClick)
+        local b = Instance.new("ImageButton")
+        b.Size = UDim2.new(0, 26, 0, 26)
+        b.Position = pos
         b.BackgroundTransparency = 1
-        b.Text = text
-        b.TextColor3 = WHITE
-        b.Font = Enum.Font.GothamMedium
-        b.TextSize = 12
+        b.Image = getImage(iconName) or ""
+        b.ImageColor3 = WHITE
+        b.ZIndex = 6
         b.AutoButtonColor = false
-        b.Parent = holder
-        softText(b)
-        hoverGlass(b, holder)
+        b.Parent = parent
         bindClick(b)
-        b.MouseButton1Click:Connect(function()
-            pressAnim(holder)
-            onClick()
-        end)
+        b.MouseButton1Click:Connect(onClick)
+        return b
     end
 
     local function songRow(name, order)
@@ -2118,9 +2263,14 @@ function createMainUI()
         row.LayoutOrder = order
         row.Parent = playerPage
 
-        local pill = makePill(row, UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0))
+        local pill = Instance.new("Frame")
+        pill.Size = UDim2.new(1, 0, 1, 0)
+        pill.BackgroundTransparency = 1
+        pill.Parent = row
+        glassify(pill, UDim.new(0, 12), {tint = GLASS_WHITE, alpha = 0.86, shine = 0.9})
+
         local lbl = Instance.new("TextLabel")
-        lbl.Size = UDim2.new(1, -160, 1, 0)
+        lbl.Size = UDim2.new(1, -92, 1, 0)
         lbl.Position = UDim2.new(0, 12, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = name
@@ -2129,36 +2279,81 @@ function createMainUI()
         lbl.TextSize = 13
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.TextTruncate = Enum.TextTruncate.AtEnd
+        lbl.ZIndex = 3
         lbl.Parent = pill
         softText(lbl)
 
-        rowBtn(pill, "play", -140, function() playSong(name) end)
-        rowBtn(pill, "delete", -70, function() deleteSong(name) end)
+        -- chạm vào bài để chọn: hiện icon play và thùng rác
+        local tap = Instance.new("TextButton")
+        tap.Size = UDim2.new(1, 0, 1, 0)
+        tap.BackgroundTransparency = 1
+        tap.Text = ""
+        tap.AutoButtonColor = false
+        tap.ZIndex = 4
+        tap.Parent = pill
+        bindClick(tap)
+        tap.MouseButton1Click:Connect(function() setSelected(name) end)
+
+        local icons = Instance.new("Frame")
+        icons.Size = UDim2.new(0, 72, 1, 0)
+        icons.Position = UDim2.new(1, -80, 0, 0)
+        icons.BackgroundTransparency = 1
+        icons.Visible = false
+        icons.ZIndex = 5
+        icons.Parent = pill
+        iconButton(icons, "icon_play.png", UDim2.new(0, 4, 0.5, -13), function() playSong(name) end)
+        iconButton(icons, "icon_trash.png", UDim2.new(0, 42, 0.5, -13), function() deleteSong(name) end)
+
+        rowsByName[name] = {row = row, icons = icons}
     end
 
     refreshList = function()
         for _, child in ipairs(playerPage:GetChildren()) do
             if child.Name == "SongRow" then child:Destroy() end
         end
-        local names = songNames()
-        if #names == 0 then
+        rowsByName = {}
+
+        local all = songNames()
+        local q = trimText(searchText)
+        local key = foldText(q)
+        local shown = {}
+        for _, name in ipairs(all) do
+            if key == "" or foldText(name):find(key, 1, true) then
+                table.insert(shown, name)
+            end
+        end
+
+        if #shown == 0 then
             local empty = Instance.new("TextLabel")
             empty.Name = "SongRow"
             empty.Size = UDim2.new(1, 0, 0, 40)
             empty.BackgroundTransparency = 1
-            empty.Text = "no songs yet. paste a script in custom song and press save."
+            if #all == 0 then
+                empty.Text = "no songs yet. paste a script in custom song and press save."
+            else
+                empty.Text = "no match for \"" .. q .. "\""
+            end
             empty.TextColor3 = gray(190)
             empty.Font = Enum.Font.Gotham
             empty.TextSize = 12
             empty.TextWrapped = true
-            empty.LayoutOrder = 1
+            empty.LayoutOrder = 3
             empty.Parent = playerPage
+            selectedName = nil
             return
         end
-        for i, name in ipairs(names) do
-            songRow(name, i)
+
+        for i, name in ipairs(shown) do
+            songRow(name, 2 + i)
+        end
+        if selectedName and rowsByName[selectedName] then
+            setSelected(selectedName)
+        else
+            selectedName = nil
         end
     end
+
+    refreshList()
 
     -- ===== CHUYỂN TRANG =====
     updatePages = function()
